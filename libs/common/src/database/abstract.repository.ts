@@ -1,4 +1,4 @@
-import { type Logger } from '@nestjs/common'
+import { type Logger } from '@nestjs/common';
 import {
   type FilterQuery,
   type Model,
@@ -7,159 +7,159 @@ import {
   type Connection,
   type HydratedDocument,
   type ClientSession,
-  PopulateOptions
-} from 'mongoose'
-import { type AbstractDocument } from './abstract.schema'
+  PopulateOptions,
+} from 'mongoose';
+import { type AbstractDocument } from './abstract.schema';
 
 export abstract class AbstractRepository<TDocument extends AbstractDocument> {
-  protected abstract readonly logger: Logger
+  protected abstract readonly logger: Logger;
 
-  protected constructor (
+  protected constructor(
     protected readonly model: Model<TDocument>,
-    private readonly connection?: Connection
+    private readonly connection?: Connection,
   ) {}
 
-  async create (
+  async create(
     document: Omit<TDocument, '_id'> | Partial<TDocument>,
-    options?: SaveOptions
+    options?: SaveOptions,
   ): Promise<TDocument> {
     const createdDocument = new this.model({
       ...document,
-      _id: new Types.ObjectId()
-    })
-    return await createdDocument.save(options as SaveOptions)
+      _id: new Types.ObjectId(),
+    });
+    return await createdDocument.save(options as SaveOptions);
   }
 
   async findOneAndPopulate<T>(
     filterQuery: FilterQuery<TDocument>,
-    populatePaths: string[]
+    populatePaths: string[],
   ): Promise<T> {
     const paths = populatePaths.map<PopulateOptions>((path) => ({
       path,
       options: {
         sort: {
-          createdAt: 'desc'
-        }
-      }
-    }))
+          createdAt: 'desc',
+        },
+      },
+    }));
     return (await this.model
       .findOne(filterQuery, {}, { lean: true })
-      .populate(paths)) as any
+      .populate(paths)) as any;
   }
 
-  async findOne (filterQuery: FilterQuery<TDocument>): Promise<TDocument | any> {
-    return await this.model.findOne(filterQuery, {}, { lean: true })
+  async findOne(filterQuery: FilterQuery<TDocument>): Promise<TDocument | any> {
+    return await this.model.findOne(filterQuery, {}, { lean: true });
   }
 
   async findAndPopulate<T>(
     filterQuery: FilterQuery<TDocument>,
-    populatePaths: string[]
+    populatePaths: string[],
   ): Promise<T[]> {
     const paths = populatePaths.map<PopulateOptions>((path) => ({
       path,
       options: {
         sort: {
-          createdAt: 'desc'
-        }
-      }
-    }))
+          createdAt: 'desc',
+        },
+      },
+    }));
     return (await this.model
       .find(filterQuery)
       .sort({ createdAt: 'desc' })
-      .populate(paths)) as any
+      .populate(paths)) as any;
   }
 
-  findRaw (): Model<TDocument> {
-    return this.model
+  findRaw(): Model<TDocument> {
+    return this.model;
   }
 
-  async findOneAndUpdate (
+  async findOneAndUpdate(
     filterQuery: FilterQuery<TDocument>,
-    update: FilterQuery<TDocument>
+    update: FilterQuery<TDocument>,
   ): Promise<any> {
     const document = await this.model.findOneAndUpdate(filterQuery, update, {
       lean: true,
-      new: true
-    })
+      new: true,
+    });
 
     if (document === null) {
-      this.logger.warn('Document not found with filterQuery:', filterQuery)
+      this.logger.warn('Document not found with filterQuery:', filterQuery);
     }
 
-    return document
+    return document;
   }
 
-  async upsert (
+  async upsert(
     filterQuery: FilterQuery<TDocument>,
-    document: Partial<TDocument>
+    document: Partial<TDocument>,
   ): Promise<HydratedDocument<TDocument> | any> {
     return await new Promise((resolve) =>
       resolve(
         this.model.findOneAndUpdate(filterQuery, document, {
           lean: true,
           upsert: true,
-          new: true
-        })
-      )
-    )
+          new: true,
+        }),
+      ),
+    );
   }
 
-  async deleteMany (
-    filterQuery?: FilterQuery<TDocument>
+  async deleteMany(
+    filterQuery?: FilterQuery<TDocument>,
   ): Promise<HydratedDocument<TDocument> | any> {
     return await new Promise((resolve) =>
-      resolve(this.model.deleteMany(filterQuery))
-    )
+      resolve(this.model.deleteMany(filterQuery)),
+    );
   }
 
-  async insertMany (
+  async insertMany(
     documents: Array<Omit<TDocument, '_id'>> | Array<Partial<TDocument>>,
-    options?: SaveOptions
+    options?: SaveOptions,
   ): Promise<any> {
-    return await this.model.insertMany(documents)
+    return await this.model.insertMany(documents);
   }
 
-  async find (filterQuery: FilterQuery<TDocument>): Promise<any> {
+  async find(filterQuery: FilterQuery<TDocument>): Promise<any> {
     return await new Promise((resolve) =>
       resolve(
         this.model
           .find(filterQuery, {}, { lean: true })
-          .sort({ createdAt: 'desc' })
-      )
-    )
+          .sort({ createdAt: 'desc' }),
+      ),
+    );
   }
 
-  async update (
+  async update(
     filterQuery: FilterQuery<TDocument>,
-    update: Partial<TDocument>
+    update: Partial<TDocument>,
   ): Promise<any> {
     return await new Promise((resolve) =>
-      resolve(this.model.updateOne(filterQuery, update))
-    )
+      resolve(this.model.updateOne(filterQuery, update)),
+    );
   }
 
-  async findAndUpdate (
+  async findAndUpdate(
     filterQuery: FilterQuery<TDocument>,
-    update: Partial<TDocument>
+    update: Partial<TDocument>,
   ): Promise<any> {
     return await new Promise((resolve) => {
       resolve(
-        this.model.updateMany(filterQuery, update).sort({ createdAt: 'desc' })
-      )
-    })
+        this.model.updateMany(filterQuery, update).sort({ createdAt: 'desc' }),
+      );
+    });
   }
 
-  async delete (id: Types.ObjectId): Promise<any> {
+  async delete(id: Types.ObjectId): Promise<any> {
     return await new Promise((resolve) =>
-      resolve(this.model.findByIdAndDelete(id))
-    )
+      resolve(this.model.findByIdAndDelete(id)),
+    );
   }
 
-  async startTransaction (): Promise<ClientSession | any> {
+  async startTransaction(): Promise<ClientSession | any> {
     if (this.connection !== undefined) {
-      const session = await this.connection.startSession()
-      session.startTransaction()
-      return session
+      const session = await this.connection.startSession();
+      session.startTransaction();
+      return session;
     }
   }
 }
