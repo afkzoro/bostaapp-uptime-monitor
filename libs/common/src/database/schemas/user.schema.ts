@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { AbstractDocument } from '@app/common';
+import { SchemaTypes } from 'mongoose';
 
 @Schema({ versionKey: false, timestamps: true })
 export class User extends AbstractDocument {
@@ -13,16 +14,16 @@ export class User extends AbstractDocument {
   isVerified: boolean;
 
   @Prop()
-  verificationToken?: string;
+  verificationToken?: string
 
-  @Prop()
-  verificationTokenExpires?: Date;
+  @Prop(SchemaTypes.Date)
+  verificationTokenExpires?: Date
 
   @Prop()
   resetPasswordToken?: string;
 
-  @Prop()
-  resetPasswordExpires?: Date;
+  @Prop(SchemaTypes.Date)
+  resetPasswordExpires?: Date
 
   @Prop({
     type: {
