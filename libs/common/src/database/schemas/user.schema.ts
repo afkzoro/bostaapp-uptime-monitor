@@ -16,6 +16,9 @@ export class User extends AbstractDocument {
   verificationToken?: string;
 
   @Prop()
+  verificationTokenExpires?: Date;
+
+  @Prop()
   resetPasswordToken?: string;
 
   @Prop()

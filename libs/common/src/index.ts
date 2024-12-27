@@ -8,4 +8,6 @@ export * from './dto/registerUser.dto';
 export * from './filters/custom-http.exception';
 export * from './filters/http-exception.filter';
 export * from './typings/response.interface';
-export * from './providers/nodemailer'
+export * from './providers/nodemailer';
+export * from './dto/loginUser.dto';
+export * from './dto/emailVerification.dto';

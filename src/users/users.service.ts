@@ -1,9 +1,11 @@
 import {
   CustomHttpException,
   EmailService,
+  loginUserRequest,
   registerUserRequest,
   ResponseWithStatus,
   User,
+  verifyUserRequest,
 } from '@app/common';
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { UserRepository } from './users.repository';
@@ -16,7 +18,7 @@ export class UsersService {
 
   constructor(
     private readonly usersRepository: UserRepository,
-    private readonly emailService: EmailService
+    private readonly emailService: EmailService,
   ) {}
 
   async register({
@@ -24,19 +26,24 @@ export class UsersService {
     password,
   }: registerUserRequest): Promise<ResponseWithStatus> {
     await this.checkExistingUser(email);
-   
-    const verificationToken = uuidv4()
-   
+
+    const verificationToken = uuidv4();
+    const verificationTokenExpires = new Date();
+    verificationTokenExpires.setMinutes(
+      verificationTokenExpires.getMinutes() + 5,
+    );
+
     const payload: Partial<User> = {
       email,
       password: await bcrypt.hash(password, 10),
       isVerified: false,
-      verificationToken
+      verificationToken,
+      verificationTokenExpires,
     };
 
     try {
-     await this.usersRepository.create(payload);
-     await this.emailService.sendVerificationEmail(email, verificationToken)
+      await this.usersRepository.create(payload);
+      await this.emailService.sendVerificationEmail(email, verificationToken);
       return { status: 1 };
     } catch (error) {
       throw new CustomHttpException(
@@ -46,31 +53,134 @@ export class UsersService {
     }
   }
 
+  async resendVerification(email: string): Promise<ResponseWithStatus> {
+    const user: User = await this.usersRepository.findOne({ email });
 
-  async verifyEmail(token: string): Promise<{ message: string }> {
-    const user: User = await this.usersRepository.findOne({ verificationToken: token })
+    if (!user) {
+      throw new CustomHttpException(
+        'User with that email does not exist',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const currentTime = new Date();
+    if (
+      user.verificationTokenExpires &&
+      user.verificationTokenExpires > currentTime
+    ) {
+      throw new CustomHttpException(
+        'Please wait before requesting another verification email',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const verificationToken = uuidv4();
+    const verificationTokenExpires = new Date();
+    verificationTokenExpires.setMinutes(
+      verificationTokenExpires.getMinutes() + 5,
+    );
+
+    try {
+      await this.usersRepository.findOneAndUpdate(
+        {
+          _id: user._id.toString(),
+        },
+        {
+          verificationToken,
+          verificationTokenExpires,
+        },
+      );
+      await this.emailService.sendVerificationEmail(email, verificationToken);
+      return { status: 1 };
+    } catch (error) {
+      throw new CustomHttpException(
+        'Failed to resend verification email',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async validateUser({
+    email,
+    password,
+  }: loginUserRequest): Promise<{ status: number; data: User }> {
+    const validateUserRequest: User = await this.usersRepository.findOne({
+      email,
+    });
+
+    if (validateUserRequest === null) {
+      throw new CustomHttpException(
+        'User with that email does not exist',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const isCorrectPassword: boolean = await bcrypt.compare(
+      password,
+      validateUserRequest.password,
+    );
+
+    if (!isCorrectPassword) {
+      throw new CustomHttpException(
+        'Provided password is incorrect',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    if (!validateUserRequest.isVerified) {
+      throw new CustomHttpException(
+        'Your email is unverified',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    validateUserRequest.password = '';
+    return {
+      status: HttpStatus.OK,
+      data: validateUserRequest,
+    };
+  }
+
+  async verifyEmail({
+    email,
+    token,
+  }: verifyUserRequest): Promise<{ message: string }> {
+    const user: User = await this.usersRepository.findOne({
+      email,
+      verificationToken: token,
+    });
 
     if (!user) {
       throw new CustomHttpException(
         'Verification token is incorrect',
-        HttpStatus.UNAUTHORIZED
-      )
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     if (user.isVerified) {
       throw new CustomHttpException(
         'User is already verified',
-        HttpStatus.BAD_REQUEST
-      )
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    await this.usersRepository.findOneAndUpdate({
+    // Check if token has expired
+    if (new Date() > user.verificationTokenExpires) {
+      throw new CustomHttpException(
+        'Verification token has expired',
+        HttpStatus.GONE,
+      );
+    }
+
+    await this.usersRepository.findOneAndUpdate(
+      {
         _id: user._id.toString(),
-        
-    }, {
+      },
+      {
         isVerified: true,
-        verificationToken: undefined
-    })
+        verificationToken: null,
+        verificationTokenExpiresAt: null,
+      },
+    );
 
     return { message: 'Email verified successfully' };
   }
