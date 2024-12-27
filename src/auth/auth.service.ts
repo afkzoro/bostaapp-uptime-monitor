@@ -1,9 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 
-import { User, TokenPayload } from '@app/common';
+import { User, TokenPayload, CustomHttpException } from '@app/common';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from 'src/users/users.service';
 
@@ -16,16 +16,19 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<User> {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
+    const user: User = await this.usersService.findByEmail(email);
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
+
+    if (!isPasswordValid && !user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (!user.isVerified) {
+      throw new CustomHttpException(
+        'Please verify your account',
+        HttpStatus.UNAUTHORIZED
+      )
+    } 
     return user;
   }
 
