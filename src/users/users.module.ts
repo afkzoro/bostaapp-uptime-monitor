@@ -10,13 +10,13 @@ import { UserRepository } from './users.repository';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './src/.env'
+      envFilePath: './src/.env',
     }),
     MongooseModule.forFeature([
       {
         name: User.name,
-        schema: UserSchema 
-      }
+        schema: UserSchema,
+      },
     ]),
     DatabaseModule,
   ],

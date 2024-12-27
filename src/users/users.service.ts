@@ -1,61 +1,59 @@
-import {  registerUserRequest, User } from '@app/common';
-import { BadRequestException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  CustomHttpException,
+  registerUserRequest,
+  ResponseWithStatus,
+  User,
+} from '@app/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { UserRepository } from './users.repository';
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-    private readonly logger = new Logger()
+  private readonly logger = new Logger();
 
-    constructor (
-        private readonly usersRepository: UserRepository
+  constructor(private readonly usersRepository: UserRepository) {}
 
-    ) {}
+  async register({
+    email,
+    password,
+  }: registerUserRequest): Promise<ResponseWithStatus> {
+    await this.checkExistingUser(email);
+    const payload: Partial<User> = {
+      email,
+      password: await bcrypt.hash(password, 10),
+      isVerified: false,
+    };
 
-    async register ({
-        email, 
-        password,
-    }: registerUserRequest) {
+    try {
+      await this.usersRepository.create(payload);
 
-        await this.checkExistingUser(email)
-        const payload: Partial<User> = {
-            email,
-            password: await bcrypt.hash(password, 10),
-            isVerified: false,   
-        }
+      //TODO: Verification logic
 
-        try {
-            const user = await this.usersRepository.create(payload)
-            //TODO: Verification logic
+      //TODO: Notification logic
 
-            //TODO: Notification logic
+      return { status: 1 };
+    } catch (error) {
+      throw new CustomHttpException(
+        'Failed to register user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
-            return user
-        } catch (error) {
-            throw new BadRequestException(
-                `can not process request. Try again later ${JSON.stringify(error)}`,
-            )
-        }
+  async findByEmail(email) {
+    return await this.usersRepository.findOne({ email });
+  }
+
+  private async checkExistingUser(email: string): Promise<User> {
+    const _email: User | null = await this.usersRepository.findOne({ email });
+    if (_email !== null) {
+      throw new CustomHttpException(
+        'Email already exists',
+        HttpStatus.CONFLICT,
+      );
     }
 
-
-    
-    async findByEmail (email) {
-        return await this.usersRepository.findOne({ email})
-    }
-
-
-
-
-    private async checkExistingUser (email: string): Promise<User> {
-        const _email: User | null = await this.usersRepository.findOne({ email })
-
-        if (_email !== null) {
-            throw new BadRequestException(
-                'Email is already registered.',
-            )
-        }
-
-        return _email as unknown as User
-    }
+    return _email as unknown as User;
+  }
 }

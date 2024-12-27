@@ -14,7 +14,7 @@ import { UsersModule } from '../users/users.module';
     PassportModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './src/.env'
+      envFilePath: './src/.env',
     }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
