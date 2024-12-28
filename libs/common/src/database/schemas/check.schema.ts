@@ -16,7 +16,7 @@ export class Check extends AbstractDocument {
   @Prop()
   url: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, default: UrlProtocol.HTTP})
   protocol: UrlProtocol
 
   @Prop()

@@ -103,7 +103,7 @@ export class UsersService {
   async validateUser({
     email,
     password,
-  }: loginUserRequest): Promise<{ status: number; data: User }> {
+  }: loginUserRequest): Promise<User> {
     const validateUserRequest: User = await this.usersRepository.findOne({
       email,
     });
@@ -134,11 +134,10 @@ export class UsersService {
       );
     }
     validateUserRequest.password = '';
-    return {
-      status: HttpStatus.OK,
-      data: validateUserRequest,
-    };
+    return validateUserRequest
+    
   }
+
 
   async verifyEmail({
     email,
@@ -199,5 +198,22 @@ export class UsersService {
     }
 
     return _email as unknown as User;
+  }
+
+  async getUserById(_id: string): Promise<User> {
+    const _user = await this.usersRepository.findOne(
+      {
+        _id,
+        isVerified: true
+      })
+
+    if (_user === null) {
+      throw new CustomHttpException(
+        `Provided user id is not found: ${_id}`,
+        HttpStatus.UNAUTHORIZED
+      )
+    }
+    _user.password = ''
+    return _user 
   }
 }

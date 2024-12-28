@@ -14,3 +14,4 @@ export * from './dto/emailVerification.dto';
 export * from './typings/urlCheckStatus.enum'
 export * from './typings/protocols.enum'
 export * from './database/schemas/check.schema'
+export * from './dto/createCheck.dto'
