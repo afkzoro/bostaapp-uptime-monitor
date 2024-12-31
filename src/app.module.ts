@@ -5,6 +5,7 @@ import { MonitorModule } from './monitor/monitor.module';
 import { ReportModule } from './report/report.module';
 import { NotificationModule } from './notification/notification.module';
 import { UsersModule } from './users/users.module';
+import { MonitoringService } from './monitoring/monitoring.service';
 
 @Module({
   imports: [
@@ -16,6 +17,6 @@ import { UsersModule } from './users/users.module';
     UsersModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [MonitoringService],
 })
 export class AppModule {}

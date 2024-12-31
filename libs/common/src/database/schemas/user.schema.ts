@@ -14,16 +14,16 @@ export class User extends AbstractDocument {
   isVerified: boolean;
 
   @Prop()
-  verificationToken?: string
+  verificationToken?: string;
 
   @Prop(SchemaTypes.Date)
-  verificationTokenExpires?: Date
+  verificationTokenExpires?: Date;
 
   @Prop()
   resetPasswordToken?: string;
 
   @Prop(SchemaTypes.Date)
-  resetPasswordExpires?: Date
+  resetPasswordExpires?: Date;
 
   @Prop({
     type: {

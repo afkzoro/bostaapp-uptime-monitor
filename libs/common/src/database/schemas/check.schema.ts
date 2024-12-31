@@ -1,14 +1,14 @@
 // src/checks/schemas/check.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import {  SchemaTypes, Types } from 'mongoose';
+import { SchemaTypes, Types } from 'mongoose';
 import { AbstractDocument } from '../abstract.schema';
 import { UrlCheckStatus } from '@app/common/typings/urlCheckStatus.enum';
 import { UrlProtocol } from '@app/common/typings/protocols.enum';
 
 @Schema({ versionKey: false, timestamps: true })
 export class Check extends AbstractDocument {
-  @Prop({ type: Types.ObjectId, ref: 'User'})
-  user: string
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  user: string;
 
   @Prop()
   name: string;
@@ -16,8 +16,8 @@ export class Check extends AbstractDocument {
   @Prop()
   url: string;
 
-  @Prop({ type: String, default: UrlProtocol.HTTP})
-  protocol: UrlProtocol
+  @Prop({ type: String, default: UrlProtocol.HTTP })
+  protocol: UrlProtocol;
 
   @Prop()
   path?: string;
@@ -57,11 +57,14 @@ export class Check extends AbstractDocument {
   @Prop({ default: false })
   ignoreSSL: boolean;
 
-  @Prop({type: String, default: UrlCheckStatus.ACTIVE})
-  status: UrlCheckStatus
+  @Prop({ type: String, default: UrlCheckStatus.ACTIVE })
+  status: UrlCheckStatus;
 
   @Prop(SchemaTypes.Date)
-  lastCheck?: string
+  lastCheck?: string;
+
+  @Prop({ type: Boolean, default: false })
+  isDeleted: boolean;
 }
 
 export const CheckSchema = SchemaFactory.createForClass(Check);
