@@ -1,14 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import {
-  Check,
-  CheckSchema,
-  DatabaseModule,
-  EmailService,
-  User,
-  UserSchema,
-} from '@app/common';
+import { Check, CheckSchema, DatabaseModule, EmailService } from '@app/common';
 import { CheckController } from './check.controller';
 import { CheckService } from './check.service';
 import { CheckRepository } from './check.repository';

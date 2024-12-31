@@ -1,9 +1,7 @@
-import { HttpException, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ClientProxy } from '@nestjs/microservices';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { catchError, lastValueFrom } from 'rxjs';
 
 import { TokenPayload } from '@app/common';
 import { UsersService } from 'src/users/users.service';
