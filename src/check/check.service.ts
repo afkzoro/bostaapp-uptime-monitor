@@ -4,6 +4,8 @@ import {
   Check,
   CreateCheckDto,
   CustomHttpException,
+  ResponseWithStatus,
+  UpdateCheckDto,
   UrlCheckStatus,
 } from '@app/common';
 
@@ -64,10 +66,34 @@ export class CheckService {
     }
   }
 
+  async updateCheck(
+    user: string,
+    payload: UpdateCheckDto,
+  ): Promise<ResponseWithStatus> {
+    const verifyCheck = await this.checkRepository.findOne({
+      user,
+      _id: payload.id,
+    });
+
+    if (verifyCheck === null) {
+      throw new CustomHttpException(
+        'Check with the provided id does not exist for this user',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    await this.checkRepository.findOneAndUpdate(
+      { user, _id: payload.id },
+      { ...payload },
+    );
+
+    return { status: 1 };
+  }
+
   async findByTags(user: string, tags: string[]): Promise<Check[]> {
     const checkTag = await this.checkRepository.find({
       user,
-      tags: { $in: tags },
+      tags: { $in: tags.map((tag) => new RegExp('^' + tag + '$', 'i')) },
     });
 
     if (checkTag === null) {

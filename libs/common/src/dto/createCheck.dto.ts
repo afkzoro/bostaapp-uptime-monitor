@@ -1,13 +1,14 @@
 import {
   IsArray,
   IsBoolean,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   IsUrl,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { UrlProtocol } from '../typings/protocols.enum';
 
 export class AuthenticationDto {
@@ -89,4 +90,67 @@ export class CreateCheckDto {
   @IsBoolean()
   @IsOptional()
   ignoreSSL?: boolean = false;
+}
+
+export class UpdateCheckDto {
+  @IsNotEmpty()
+  @IsString()
+  id: string;
+
+  @IsString()
+  name: string;
+
+  @IsString()
+  @IsOptional()
+  path?: string;
+
+  @IsNumber()
+  @IsOptional()
+  port?: number;
+
+  @IsString()
+  @IsOptional()
+  webhook?: string;
+
+  @IsNumber()
+  @IsOptional()
+  timeout?: number = 5000;
+
+  @IsNumber()
+  @IsOptional()
+  interval?: number = 600000;
+
+  @IsNumber()
+  @IsOptional()
+  threshold?: number = 1;
+
+  @ValidateNested()
+  @Type(() => AuthenticationDto)
+  @IsOptional()
+  authentication?: AuthenticationDto;
+
+  @ValidateNested({ each: true })
+  @Type(() => HeaderDto)
+  @IsOptional()
+  httpHeaders?: HeaderDto[];
+
+  @ValidateNested()
+  @Type(() => AssertDto)
+  @IsOptional()
+  assert?: AssertDto;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags?: string[];
+
+  @IsBoolean()
+  @IsOptional()
+  ignoreSSL?: boolean = false;
+}
+
+export class TagsQueryDto {
+  @IsString({ each: true })
+  @Transform(({ value }) => value.split(',').map((tag: string) => tag.trim()))
+  tags: string[];
 }
