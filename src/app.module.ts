@@ -4,7 +4,6 @@ import { CheckModule } from './check/check.module';
 import { ReportModule } from './report/report.module';
 import { NotificationModule } from './notification/notification.module';
 import { UsersModule } from './users/users.module';
-import { MonitoringService } from './monitoring/monitoring.service';
 import { MonitoringModule } from './monitoring/monitoring.module';
 
 @Module({
@@ -17,6 +16,6 @@ import { MonitoringModule } from './monitoring/monitoring.module';
     MonitoringModule,
   ],
   controllers: [],
-  providers: [MonitoringService],
+  providers: [],
 })
 export class AppModule {}

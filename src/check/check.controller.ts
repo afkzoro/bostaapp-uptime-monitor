@@ -13,16 +13,19 @@ import {
   Check,
   CreateCheckDto,
   CurrentUser,
-  TagsQueryDto,
   UpdateCheckDto,
   User,
 } from '@app/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { MonitoringService } from 'src/monitoring/monitoring.service';
 
 @Controller('check')
 @UseGuards(JwtAuthGuard)
 export class CheckController {
-  constructor(private checkService: CheckService) {}
+  constructor(
+    private checkService: CheckService,
+    private monitoringService: MonitoringService,
+  ) {}
 
   @Post('create')
   async createCheck(
@@ -56,7 +59,14 @@ export class CheckController {
   }
 
   @Get('tags/:tags')
-  async findByTags(@CurrentUser() user: User, @Param() { tags }: TagsQueryDto) {
-    return await this.checkService.findByTags(user._id.toString(), tags);
+  async findByTags(@CurrentUser() user: User, @Param('tags') tags: string) {
+    const tagsArray = tags.split(',');
+    return await this.checkService.findByTags(user._id.toString(), tagsArray);
+  }
+
+  @Get('result/:id')
+  async getCheckResult(@CurrentUser() user: User, @Param('id') id: string) {
+    const check = await this.checkService.getCheck(user._id.toString(), id);
+    return await this.monitoringService.performCheck(check);
   }
 }

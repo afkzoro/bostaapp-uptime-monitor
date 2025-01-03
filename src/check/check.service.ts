@@ -91,6 +91,7 @@ export class CheckService {
   }
 
   async findByTags(user: string, tags: string[]): Promise<Check[]> {
+    console.log(tags);
     const checkTag = await this.checkRepository.find({
       user,
       tags: { $in: tags.map((tag) => new RegExp('^' + tag + '$', 'i')) },

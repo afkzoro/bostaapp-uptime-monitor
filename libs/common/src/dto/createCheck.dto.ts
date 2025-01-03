@@ -8,7 +8,7 @@ import {
   IsUrl,
   ValidateNested,
 } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { UrlProtocol } from '../typings/protocols.enum';
 
 export class AuthenticationDto {
@@ -147,10 +147,4 @@ export class UpdateCheckDto {
   @IsBoolean()
   @IsOptional()
   ignoreSSL?: boolean = false;
-}
-
-export class TagsQueryDto {
-  @IsString({ each: true })
-  @Transform(({ value }) => value.split(',').map((tag: string) => tag.trim()))
-  tags: string[];
 }

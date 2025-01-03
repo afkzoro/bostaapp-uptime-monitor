@@ -5,6 +5,7 @@ import { Check, CheckSchema, DatabaseModule, EmailService } from '@app/common';
 import { CheckController } from './check.controller';
 import { CheckService } from './check.service';
 import { CheckRepository } from './check.repository';
+import { MonitoringModule } from 'src/monitoring/monitoring.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CheckRepository } from './check.repository';
         schema: CheckSchema,
       },
     ]),
+    MonitoringModule,
     DatabaseModule,
   ],
   controllers: [CheckController],
