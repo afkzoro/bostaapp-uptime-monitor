@@ -5,6 +5,7 @@ import { ReportModule } from './report/report.module';
 import { NotificationModule } from './notification/notification.module';
 import { UsersModule } from './users/users.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
+import { QueueModule } from '@app/common';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { MonitoringModule } from './monitoring/monitoring.module';
     NotificationModule,
     UsersModule,
     MonitoringModule,
+    QueueModule
   ],
   controllers: [],
   providers: [],
