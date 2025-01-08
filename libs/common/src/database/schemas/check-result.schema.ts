@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { AbstractDocument } from '../abstract.schema';
 import { Types } from 'mongoose';
+import { UrlCheckStatus } from '@app/common/typings/urlCheckStatus.enum';
 
 @Schema({
   timestamps: true,
@@ -35,6 +36,10 @@ export class CheckResult extends AbstractDocument {
     region?: string;
     headers?: Record<string, string>;
   };
+    
+  @Prop({ type: String })
+  status: UrlCheckStatus;
+
 }
 
 export const CheckResultSchema = SchemaFactory.createForClass(CheckResult);

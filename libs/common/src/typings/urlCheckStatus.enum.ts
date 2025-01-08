@@ -1,5 +1,5 @@
 export enum UrlCheckStatus {
   ACTIVE = 'ACTIVE', // Default
-  STOPPED = 'PAUSED',
+  DOWN = 'DOWN',
   REMOVED = 'DISABLED',
 }
