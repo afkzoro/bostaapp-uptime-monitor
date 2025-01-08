@@ -4,6 +4,8 @@ import axios from 'axios';
 import { Check, CheckResult, UrlCheckStatus } from '@app/common';
 import { CheckResultRepository } from './check-result.repository';
 import { CheckRepository } from 'src/check/check.repository';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class MonitoringService {
@@ -12,7 +14,19 @@ export class MonitoringService {
   constructor(
     private readonly checkResultRepository: CheckResultRepository,
     private readonly checkRepository: CheckRepository,
+    @InjectQueue('monitoring') private monitoringQueue: Queue
   ) {}
+
+  async scheduleNextCheck(check: Check): Promise<void> {
+    await this.monitoringQueue.add(
+      'perform-check',
+      { check },
+      {
+        delay: check.interval,
+        jobId: `check:${check._id}`
+      }
+    )
+  }
 
   async performCheck(check: Check): Promise<CheckResult> {
     const startTime = Date.now();
@@ -52,6 +66,57 @@ export class MonitoringService {
     await this.updateCheckStatus(check, result);
     return result;
   }
+
+  async initiateMonitoring(check: Check): Promise<void> {
+    // Clean-up jobs
+    const existingJob = await this.monitoringQueue.getJob(`check:${check._id}`)
+    if (existingJob) {
+      await existingJob.remove()
+    }
+
+    // Schedule immediate check
+    await this.monitoringQueue.add(
+      'perform-check',
+      { check },
+      { jobId: `check:${check._id}`}
+    )
+  }
+
+  async pauseMonitoring(checkId: string): Promise<void> {
+    const job = await this.monitoringQueue.getJob(`check:${checkId}`)
+    if(job) {
+      await job.remove()
+    }
+
+    await this.checkRepository.findOneAndUpdate(
+      { _id: checkId },
+      { status: UrlCheckStatus.PAUSED }
+    )
+  }
+
+  async getCheckStats(checkId: string, period: number = 24): Promise<any> {
+    const startDate = new Date(Date.now() - period * 60 * 60 * 1000);
+
+    const results: CheckResult[] = await this.checkResultRepository.findRaw().find({
+      checkId,
+      timestamp: { $gte: startDate }
+    }).sort({ timestamp: 1 }).exec()
+
+    return {
+      total: results.length,
+      uptime: results.filter(r => r.isUp).length,
+      downtime: results.filter(r => !r.isUp).length,
+      averageResponseTime: results.reduce((acc, curr) => acc + curr.responseTime, 0) / results.length,
+      history: results.map(r => ({
+        timestamp: r.timestamp,
+        status: r.isUp ? 'up' : 'down',
+        responseTime: r.responseTime,
+      }))
+    };
+
+  }
+
+
 
   private buildUrl(check: Check): string {
     let url = `${check.protocol.toLowerCase()}://${check.url}`;

@@ -21,7 +21,9 @@ export class MonitoringProcessor {
             const previousStatus = job.data.check.status;
             const result = await this.monitoringService.performCheck(job.data.check)
 
-            if (previousStatus !== result.)
+            if (previousStatus !== result.status) {
+                console.log("There's a status change")
+            }
         } catch (error) {
             
         }
