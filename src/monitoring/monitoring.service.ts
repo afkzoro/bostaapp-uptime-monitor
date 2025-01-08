@@ -1,7 +1,7 @@
 // src/monitoring/monitoring.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
-import { Check, CheckResult } from '@app/common';
+import { Check, CheckResult, UrlCheckStatus } from '@app/common';
 import { CheckResultRepository } from './check-result.repository';
 import { CheckRepository } from 'src/check/check.repository';
 
@@ -45,6 +45,7 @@ export class MonitoringService {
       responseTime,
       statusCode,
       error,
+      status: isUp ? UrlCheckStatus.ACTIVE : UrlCheckStatus.DOWN,
     };
 
     const result = await this.checkResultRepository.create(createCheckResult);
@@ -98,7 +99,7 @@ export class MonitoringService {
       {
         $set: {
           lastCheck: result.timestamp,
-          status: result.isUp ? 'active' : 'down',
+          status: result.isUp ? UrlCheckStatus.ACTIVE : UrlCheckStatus.DOWN,
         },
       },
     );
