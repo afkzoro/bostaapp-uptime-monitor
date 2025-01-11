@@ -11,7 +11,6 @@ export class AuthService {
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
-    private readonly usersService: UsersService,
   ) {}
 
   async login(user: User, response: Response): Promise<void> {
