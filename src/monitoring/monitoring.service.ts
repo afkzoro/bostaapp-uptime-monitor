@@ -14,18 +14,22 @@ export class MonitoringService {
   constructor(
     private readonly checkResultRepository: CheckResultRepository,
     private readonly checkRepository: CheckRepository,
-    @InjectQueue('monitoring') private monitoringQueue: Queue
+    @InjectQueue('monitoring') private monitoringQueue: Queue,
   ) {}
 
   async scheduleNextCheck(check: Check): Promise<void> {
+    this.logger.debug(
+      `Scheduling next check for ${check.name} in ${check.interval}ms`,
+    );
+
     await this.monitoringQueue.add(
       'perform-check',
       { check },
       {
         delay: check.interval,
-        jobId: `check:${check._id}`
-      }
-    )
+        jobId: `check:${check._id}:${Date.now()}`,
+      },
+    );
   }
 
   async performCheck(check: Check): Promise<CheckResult> {
@@ -68,55 +72,63 @@ export class MonitoringService {
   }
 
   async initiateMonitoring(check: Check): Promise<void> {
+    this.logger.debug(`Initiating monitoring for check ${check.name}`);
+
     // Clean-up jobs
-    const existingJob = await this.monitoringQueue.getJob(`check:${check._id}`)
+    const existingJob = await this.monitoringQueue.getJob(`check:${check._id}`);
     if (existingJob) {
-      await existingJob.remove()
+      await existingJob.remove();
     }
 
     // Schedule immediate check
     await this.monitoringQueue.add(
       'perform-check',
       { check },
-      { jobId: `check:${check._id}`}
-    )
+      { jobId: `check:${check._id}` },
+    );
+
+    // Add this to ensure continuous monitoring
+    await this.scheduleNextCheck(check);
   }
 
   async pauseMonitoring(checkId: string): Promise<void> {
-    const job = await this.monitoringQueue.getJob(`check:${checkId}`)
-    if(job) {
-      await job.remove()
+    const job = await this.monitoringQueue.getJob(`check:${checkId}`);
+    if (job) {
+      await job.remove();
     }
 
     await this.checkRepository.findOneAndUpdate(
       { _id: checkId },
-      { status: UrlCheckStatus.PAUSED }
-    )
+      { status: UrlCheckStatus.PAUSED },
+    );
   }
 
   async getCheckStats(checkId: string, period: number = 24): Promise<any> {
     const startDate = new Date(Date.now() - period * 60 * 60 * 1000);
 
-    const results: CheckResult[] = await this.checkResultRepository.findRaw().find({
-      checkId,
-      timestamp: { $gte: startDate }
-    }).sort({ timestamp: 1 }).exec()
+    const results: CheckResult[] = await this.checkResultRepository
+      .findRaw()
+      .find({
+        checkId,
+        timestamp: { $gte: startDate },
+      })
+      .sort({ timestamp: 1 })
+      .exec();
 
     return {
       total: results.length,
-      uptime: results.filter(r => r.isUp).length,
-      downtime: results.filter(r => !r.isUp).length,
-      averageResponseTime: results.reduce((acc, curr) => acc + curr.responseTime, 0) / results.length,
-      history: results.map(r => ({
+      uptime: results.filter((r) => r.isUp).length,
+      downtime: results.filter((r) => !r.isUp).length,
+      averageResponseTime:
+        results.reduce((acc, curr) => acc + curr.responseTime, 0) /
+        results.length,
+      history: results.map((r) => ({
         timestamp: r.timestamp,
         status: r.isUp ? 'up' : 'down',
         responseTime: r.responseTime,
-      }))
+      })),
     };
-
   }
-
-
 
   private buildUrl(check: Check): string {
     let url = `${check.protocol.toLowerCase()}://${check.url}`;
