@@ -8,12 +8,16 @@ import {
   UpdateCheckDto,
   UrlCheckStatus,
 } from '@app/common';
+import { MonitoringService } from 'src/monitoring/monitoring.service';
 
 @Injectable()
 export class CheckService {
   private readonly logger = new Logger();
 
-  constructor(private readonly checkRepository: CheckRepository) {}
+  constructor(
+    private readonly checkRepository: CheckRepository,
+    private readonly monitoringService: MonitoringService,
+  ) {}
 
   async createCheck(
     user: string,
@@ -24,7 +28,9 @@ export class CheckService {
       ...createCheckDto,
       status: UrlCheckStatus.ACTIVE,
     };
-    return await this.checkRepository.create(createCheckPayload);
+    const check = await this.checkRepository.create(createCheckPayload);
+    await this.monitoringService.initiateMonitoring(check);
+    return check;
   }
 
   async getAllChecks(user: string): Promise<Check[]> {
@@ -82,11 +88,11 @@ export class CheckService {
       );
     }
 
-    await this.checkRepository.findOneAndUpdate(
+    const updatedCheck = await this.checkRepository.findOneAndUpdate(
       { user, _id: payload.id },
       { ...payload },
     );
-
+    await this.monitoringService.initiateMonitoring(updatedCheck);
     return { status: 1 };
   }
 
