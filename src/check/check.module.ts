@@ -6,6 +6,9 @@ import { CheckController } from './check.controller';
 import { CheckService } from './check.service';
 import { CheckRepository } from './check.repository';
 import { MonitoringModule } from 'src/monitoring/monitoring.module';
+import { BullModule } from '@nestjs/bull';
+import { MonitoringService } from 'src/monitoring/monitoring.service';
+import { MonitoringProcessor } from 'src/monitoring/monitoring.processor';
 
 @Module({
   imports: [
@@ -19,11 +22,20 @@ import { MonitoringModule } from 'src/monitoring/monitoring.module';
         schema: CheckSchema,
       },
     ]),
+    BullModule.registerQueue({
+      name: 'monitoring',
+    }),
     MonitoringModule,
     DatabaseModule,
   ],
   controllers: [CheckController],
-  providers: [CheckService, CheckRepository, EmailService],
+  providers: [
+    CheckService,
+    CheckRepository,
+    EmailService,
+    MonitoringService,
+    MonitoringProcessor,
+  ],
   exports: [CheckService, CheckRepository],
 })
 export class CheckModule {}
