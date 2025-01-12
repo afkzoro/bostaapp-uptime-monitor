@@ -69,4 +69,29 @@ export class CheckController {
     const check = await this.checkService.getCheck(user._id.toString(), id);
     return await this.monitoringService.performCheck(check);
   }
+
+  @Post(':id/start')
+  async startMonitoring(@CurrentUser() user: User, @Param('id') id: string) {
+    const check = await this.checkService.getCheck(user._id.toString(), id);
+    return this.monitoringService.initiateMonitoring(check);
+  }
+
+  // @Post(':id/pause')
+  // async pauseMonitoring(
+  //   @UserId() userId: string,
+  //   @Param('id') id: string,
+  // ) {
+  //   await this.checksService.findOne(userId, id);
+  //   return this.monitoringService.pauseMonitoring(id);
+  // }
+
+  // @Get(':id/stats')
+  // async getStats(
+  //   @UserId() userId: string,
+  //   @Param('id') id: string,
+  //   @Query('period') period: number,
+  // ) {
+  //   await this.checksService.findOne(userId, id);
+  //   return this.monitoringService.getCheckStats(id, period);
+  // }
 }
