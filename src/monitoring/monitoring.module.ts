@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MonitoringService } from './monitoring.service';
 import { CheckResultRepository } from './check-result.repository';
 import { CheckModule } from 'src/check/check.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
@@ -20,6 +21,9 @@ import { CheckModule } from 'src/check/check.module';
     ]),
     DatabaseModule,
     forwardRef(() => CheckModule),
+    BullModule.registerQueue({
+      name: 'monitoring', // This creates the 'BullQueue_monitoring' token
+    }),
   ],
   providers: [MonitoringService, CheckResultRepository],
   exports: [MonitoringService, CheckResultRepository],
