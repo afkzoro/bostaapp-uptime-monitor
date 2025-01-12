@@ -36,10 +36,9 @@ export class CheckResult extends AbstractDocument {
     region?: string;
     headers?: Record<string, string>;
   };
-    
+
   @Prop({ type: String })
   status: UrlCheckStatus;
-
 }
 
 export const CheckResultSchema = SchemaFactory.createForClass(CheckResult);

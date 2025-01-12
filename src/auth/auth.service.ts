@@ -4,7 +4,6 @@ import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 
 import { User, TokenPayload } from '@app/common';
-import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class AuthService {

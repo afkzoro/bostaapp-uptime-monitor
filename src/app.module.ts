@@ -15,7 +15,7 @@ import { QueueModule } from '@app/common';
     NotificationModule,
     UsersModule,
     MonitoringModule,
-    QueueModule
+    QueueModule,
   ],
   controllers: [],
   providers: [],
